@@ -34,8 +34,24 @@ checkOrGetFiles <- function( filesToCheck ) {
     
     # If at least one of the named files doesn't exist
     if ( !allOK ) {
-        # attampt to go get the files
+        # Clean up all text files in working directory first so we
+        # start with a clean slate as far as data is conerned
+        archiveAndRemoveTextFiles()
+        
     }
     
     return( allOK )
+}
+
+
+#   Function: archiveAndCleanupTextFiles
+#      Notes: will archive all text files into a zip file with the 
+#           : current date as a name and then delete the text files 
+#           : when done.
+#    WARNING: THIS WILL DELETE FILES WITHOUT CONFIRMATION. TREAT WITH
+#           : CARE.
+# Parameters: none
+#    Returns: nothing
+archiveAndRemoveTextFiles <- function() {
+    
 }

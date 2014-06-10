@@ -18,11 +18,21 @@ source("utilities.R")
 
 # Mainline - Entry point for the module
 run_analysis <- function() {
-    # Name of the data files
-    RAW_DATA_FILES <- c()
+    # Names of the raw data files
+    RAW_DATA_FILES <- c("raw/activity_labels.txt",
+                        "raw/features.txt",
+                        "raw/features_info.txt",
+                        "raw/subject_test.txt",
+                        "raw/subject_train.txt",
+                        "raw/X_test.txt",
+                        "raw/X_train.txt",
+                        "raw/y_test.txt",
+                        "raw/y_train.txt" )
     
     # If the files don't exist and/or cant be retrieved
     if ( !checkOrGetFiles( RAW_DATA_FILES )) {
         stop( "Cannot access raw data files." )    # Exit with error message
+    } else {
+        
     }
 }

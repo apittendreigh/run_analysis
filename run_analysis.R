@@ -36,6 +36,8 @@ run_analysis <- function() {
     traindata <- data.frame()
     testactivities <- data.frame()
     trainactivities <- data.frame()
+    testsubjects <- data.frame()
+    trainsubjects <- data.frame()
     rawdata <- data.frame()
     
     # table for the clean data at the end
@@ -67,9 +69,17 @@ run_analysis <- function() {
                                       header = FALSE,
                                       col.names = c("activitycode"))
        
-       trainactivities <<- read.table("raw/y_train.txt",
-                                      header = FALSE,
-                                      col.names = c("activitycode"))
+        trainactivities <<- read.table("raw/y_train.txt",
+                                       header = FALSE,
+                                       col.names = c("activitycode"))
+        
+        testsubjects <<- read.table("raw/subject_test.txt", 
+                                    header = FALSE,
+                                    col.names = c("subjectid"))
+        
+        trainsubjects <<- read.table("raw/subject_train.txt",
+                                     header = FALSE,
+                                     col.names = c("subjectid"))
     }
     
 
@@ -105,8 +115,12 @@ run_analysis <- function() {
         trainactivities <<- merge(trainactivities, activities)
         testdata <<- cbind(testdata, 
                            activity = testactivities$activityname)
+        testdata <<- cbind(testdata,
+                           subject = testsubjects$subjectid)
         traindata <<- cbind(traindata, 
                             activity = trainactivities$activityname)
+        traindata <<- cbind(traindata, 
+                            subject = trainsubjects$subjectid)
         rawdata <<- testdata
         rawdata <<- rbind(rawdata, traindata)
     }
@@ -123,6 +137,7 @@ run_analysis <- function() {
         
         # get the needed variables from the raw data frame
         cleandata <<- data.frame(activity = rawdata$activity,
+                                 subject = rawdata$subject,
                                  body_accel_mean_x_axis = rawdata$tBodyAcc_mean_X,
                                  body_accel_mean_y_axis = rawdata$tBodyAcc_mean_Y,
                                  body_accel_mean_z_axis = rawdata$tBodyAcc_mean_Z,
@@ -214,7 +229,7 @@ run_analysis <- function() {
         nameColumns()                              # name data columns
         mergeData()                                # Merge needed tables together
         extractData()                              # Extract into tidy data set
-        View(cleandata); print(dim(cleandata))
+        View(cleandata); View(table(cleandata$subject)); print(dim(cleandata))
         message("Analysis is completed!")
     }
 }

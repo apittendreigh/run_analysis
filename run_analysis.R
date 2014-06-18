@@ -2,7 +2,7 @@
 #             Module: run_analysis.R
 #         Written by: Alex Pittendreigh
 #               Date: 8th June 2014
-# Relies on Packages: data.table (enhanced data.frame)
+# Relies on Packages: 
 #      Other Modules: utilities.R
 #            Remarks: This is the main R driver program that will download,
 #                   : extract, and process data files as required by the
@@ -12,7 +12,7 @@
 #-----------------------------------------------------------------------------
 
 # Load required packages
-require(data.table)
+
 
 # Load required supplmentary modukes
 source("utilities.R")
@@ -30,15 +30,16 @@ run_analysis <- function() {
                         "raw/y_train.txt" )
 
     # Declare empty data.tables for the raw data
-    activities <- data.table()
-    colnames <- data.table()
-    testdata <- data.table()
-    traindata <- data.table()
-    testactivities <- data.table()
-    trainactivities <- data.table()
+    activities <- data.frame()
+    colnames <- data.frame()
+    testdata <- data.frame()
+    traindata <- data.frame()
+    testactivities <- data.frame()
+    trainactivities <- data.frame()
+    rawdata <- data.frame()
     
     # table for the clean data at the end
-    cleandata <- data.table()
+    cleandata <- data.frame()
     
     
     #   Function: loadRawData
@@ -50,26 +51,25 @@ run_analysis <- function() {
     loadRawData <- function() {
         message("Please wait while data tables are loaded...")
         
-        activities <<- as.data.table(read.table("raw/activity_labels.txt", 
+        activities <<- read.table("raw/activity_labels.txt", 
                                   header = FALSE, 
-                                  col.names = c("activitycode", "activityname")))
+                                  col.names = c("activitycode", "activityname"))
         
-       colnames <<- as.data.table(read.table("raw/features.txt", 
-                                  header = FALSE, 
-                                  col.names = c("colnumber", "colname")))
+        colnames <<- read.table("raw/features.txt", 
+                               header = FALSE, 
+                               col.names = c("colnumber", "colname"))
        
-        testdata <<- as.data.table(read.table("raw/X_test.txt", header = FALSE))
+        testdata <<- read.table("raw/X_test.txt", header = FALSE)
        
-        traindata <<- as.data.table(read.table("raw/X_train.txt",
-                                               header = FALSE))
+        traindata <<- read.table("raw/X_train.txt", header = FALSE)
        
-        testactivities <<- as.data.table(read.table("raw/y_test.txt",
-                                                    header = FALSE,
-                                                    col.names = c("activitycode")))
+        testactivities <<- read.table("raw/y_test.txt",
+                                      header = FALSE,
+                                      col.names = c("activitycode"))
        
-       trainactivities <<- as.data.frame(read.table("raw/y_train.txt",
-                                                     header = FALSE,
-                                                     col.names = c("activitycode")))
+       trainactivities <<- read.table("raw/y_train.txt",
+                                      header = FALSE,
+                                      col.names = c("activitycode"))
     }
     
 
@@ -87,12 +87,33 @@ run_analysis <- function() {
         colnames$colname <<- gsub("-", "_", colnames$colname)
         
         # apply column names to the test and training data tables
+        names(testdata) <<- colnames$colname
+        names(traindata) <<- colnames$colname
+    }
+    
+
+    #   Function: mergeData
+    #      Notes: Combines the raw data tables into a single data
+    #           : table that can be processed. 
+    # Parameters: none
+    #    Returns: nothing
+    mergeData <- function() {
+        message("Merging raw data...")
         
+        # combine data
+        testactivities <<- merge(testactivities, activities)
+        trainactivities <<- merge(trainactivities, activities)
+        testdata <<- cbind(testdata, 
+                           activity = testactivities$activityname)
+        traindata <<- cbind(traindata, 
+                            activity = trainactivities$activityname)
+        rawdata <<- testdata
+        rawdata <<- rbind(rawdata, traindata)
     }
     
     
     ##------------------------------------------------------------------------
-    ## MAINLINE OF FUNCTION STARTS BELOW
+    ## MAINLINE OF FUNCTION run_anaylis() STARTS BELOW
     ##------------------------------------------------------------------------
     
     # If the files don't exist and/or cant be retrieved
@@ -101,6 +122,7 @@ run_analysis <- function() {
     } else {
         loadRawData()                              # load data from text files
         nameColumns()                              # name data columns
-        print(colnames)
+        mergeData()                                # Merge needed tables together
+        
     }
 }

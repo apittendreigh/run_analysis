@@ -2,7 +2,7 @@
 #             Module: run_analysis.R
 #         Written by: Alex Pittendreigh
 #               Date: 8th June 2014
-# Relies on Packages: 
+# Relies on Packages: plyr
 #      Other Modules: utilities.R
 #            Remarks: This is the main R driver program that will download,
 #                   : extract, and process data files as required by the
@@ -12,7 +12,7 @@
 #-----------------------------------------------------------------------------
 
 # Load required packages
-
+library( plyr )
 
 # Load required supplmentary modukes
 source("utilities.R")
@@ -207,14 +207,39 @@ run_analysis <- function() {
                                  angle_z_gravity_mean = rawdata$angle_Z_gravityMean
         )
         
+        # sort data frame by activity and then by subject
+        cleandata <<- arrange(cleandata, activity, subject)
+        
         # write the clean data to the data directory in the form of a .RData
         # file as well as a .csv (comman delimited) file
         message("Writing cleansed data to disk in 'data' directory...")
-        write.table( cleandata, file="data/cleaned_data.csv", 
+        write.table( cleandata, 
+                     file = "data/cleaned_data.csv", 
                      sep = ",",
                      row.names = FALSE)
         save( cleandata, file = "data/cleaned_data.RData")        
     }
+    
+    
+    #   Function: summarizeData
+    #      Notes: Creates a second data frame from the clean data giving 
+    #           : averages for each indicator grouped by activity and then
+    #           : by subject
+    # Parameters: none
+    #    Returns: nothing
+    summarizeData <- function() {
+        message("Summarizing data to the 'data' directory...")
+        
+        averages <- ddply(cleandata, .(activity, subject), colwise(mean))
+        averages <- arrange(averages, activity, subject)
+        
+        # Write out the summarized data to disk
+        write.table(averages, 
+                    file = "data/summary_means.csv",
+                    sep = ",",
+                    row.names = FALSE)
+        save( averages, file = "data/summary_means.RData")
+    } 
     
     
     ##------------------------------------------------------------------------
@@ -229,7 +254,7 @@ run_analysis <- function() {
         nameColumns()                              # name data columns
         mergeData()                                # Merge needed tables together
         extractData()                              # Extract into tidy data set
-        View(cleandata); View(table(cleandata$subject)); print(dim(cleandata))
+        summarizeData()                            # summaize avg for clean data
         message("Analysis is completed!")
     }
 }

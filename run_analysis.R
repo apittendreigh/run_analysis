@@ -2,7 +2,7 @@
 #             Module: run_analysis.R
 #         Written by: Alex Pittendreigh
 #               Date: 8th June 2014
-# Relies on Packages: plyr
+# Relies on Packages: plyr, reshape2, stringr
 #      Other Modules: utilities.R
 #            Remarks: This is the main R driver program that will download,
 #                   : extract, and process data files as required by the
@@ -13,6 +13,8 @@
 
 # Load required packages
 library( plyr )
+library( stringr )
+library( reshape2 )
 
 # Load required supplmentary modukes
 source("utilities.R")
@@ -40,8 +42,8 @@ run_analysis <- function() {
     trainsubjects <- data.frame()
     rawdata <- data.frame()
     
-    # table for the clean data at the end
-    cleandata <- data.frame()
+    # table for the tidy data at the end
+    tidydata <- data.frame()
     
     
     #   Function: loadRawData
@@ -136,88 +138,81 @@ run_analysis <- function() {
         message('Compiling first clean data set...')
         
         # get the needed variables from the raw data frame
-        cleandata <<- data.frame(activity = rawdata$activity,
-                                 subject = rawdata$subject,
-                                 body_accel_mean_x_axis = rawdata$tBodyAcc_mean_X,
-                                 body_accel_mean_y_axis = rawdata$tBodyAcc_mean_Y,
-                                 body_accel_mean_z_axis = rawdata$tBodyAcc_mean_Z,
-                                 body_accel_stddev_x_axis = rawdata$tBodyAcc_std_X,
-                                 body_accel_stddev_y_axis = rawdata$tBodyAcc_std_Y,
-                                 body_accel_stddev_z_axis = rawdata$tBodyAcc_std_Z,
-                                 gravity_accel_mean_x_axis = rawdata$tGravityAcc_mean_X,
-                                 gravity_accel_mean_y_axis = rawdata$tGravityAcc_mean_Y,
-                                 gravity_accel_mean_z_axis = rawdata$tGravityAcc_mean_Z,
-                                 gravity_accel_stddev_x_axis = rawdata$tGravityAcc_std_X,
-                                 gravity_accel_stddev_y_axis = rawdata$tGravityAcc_std_Y,
-                                 gravity_accel_stddev_z_axis = rawdata$tGravityAcc_std_Z,
-                                 body_accel_jerk_mean_x_axis = rawdata$tBodyAccJerk_mean_X,
-                                 body_accel_jerk_mean_y_axis = rawdata$tBodyAccJerk_mean_Y,
-                                 body_accel_jerk_mean_z_axis = rawdata$tBodyAccJerk_mean_Z,
-                                 body_accel_jerk_stddev_x_axis = rawdata$tBodyAccJerk_std_X,
-                                 body_accel_jerk_stddev_y_axis = rawdata$tBodyAccJerk_std_Y,
-                                 body_accel_jerk_stddev_z_axis = rawdata$tBodyAccJerk_std_Z, 
-                                 body_gyro_mean_x_axis = rawdata$tBodyGyro_mean_X,
-                                 body_gyro_mean_y_axis = rawdata$tBodyGyro_mean_Y,
-                                 body_gyro_mean_z_axis = rawdata$tBodyGyro_mean_Z,
-                                 body_gyro_stddev_x_axis = rawdata$tBodyGyro_std_X,
-                                 body_gyro_stddev_y_axis = rawdata$tBodyGyro_std_Y,
-                                 body_gyro_stddev_z_axis = rawdata$tBodyGyro_std_Z,
-                                 body_gyro_jerk_mean_x_axis = rawdata$tBodyGyroJerk_mean_X,
-                                 body_gyro_jerk_mean_y_axis = rawdata$tBodyGyroJerk_mean_Y,
-                                 body_gyro_jerk_mean_z_axis = rawdata$tBodyGyroJerk_mean_Z,
-                                 body_gyro_jerk_stddev_x_axis = rawdata$tBodyGyroJerk_std_X,
-                                 body_gyro_jerk_stddev_y_axis = rawdata$tBodyGyroJerk_std_Y,
-                                 body_gyro_jerkstddev_z_axis = rawdata$tBodyGyroJerk_std_Z,
-                                 body_accel_magnification_mean = rawdata$tBodyAccMag_mean,
-                                 body_accel_magnification_stddev = rawdata$tBodyAccMag_std,
-                                 gravity_accel_magnification_mean = rawdata$tGravityAccMag_mean,
-                                 gravity_accel_magnification_stddev = rawdata$tGravityAccMag_std,
-                                 ff_body_accel_mean_x_axis = rawdata$fBodyAcc_mean_X,
-                                 ff_body_accel_mean_y_axis = rawdata$fBodyAcc_mean_Y,
-                                 ff_body_accel_mean_z_axis = rawdata$fBodyAcc_mean_Z,
-                                 ff_body_accel_stddev_x_axis = rawdata$fBodyAcc_std_X,
-                                 ff_body_accel_stddev_y_axis = rawdata$fBodyAcc_std_Y,
-                                 ff_body_accel_stddev_z_axis = rawdata$fBodyAcc_std_Z,
-                                 ff_body_accel_jerk_mean_x_axis = rawdata$fBodyAccJerk_mean_X,
-                                 ff_body_accel_jerk_mean_y_axis = rawdata$fBodyAccJerk_mean_Y,
-                                 ff_body_accel_jerk_mean_z_axis = rawdata$fBodyAccJerk_mean_Z,
-                                 ff_body_accel_jerk_stddev_x_axis = rawdata$fBodyAccJerk_std_X,
-                                 ff_body_accel_jerk_stddev_y_axis = rawdata$fBodyAccJerk_std_Y,
-                                 ff_body_accel_jerk_stddev_z_axis = rawdata$fBodyAccJerk_std_Z, 
-                                 ff_body_gyro_mean_x_axis = rawdata$fBodyGyro_mean_X,
-                                 ff_body_gyro_mean_y_axis = rawdata$fBodyGyro_mean_Y,
-                                 ff_body_gyro_mean_z_axis = rawdata$fBodyGyro_mean_Z,
-                                 ff_body_gyro_stddev_x_axis = rawdata$fBodyGyro_std_X,
-                                 ff_body_gyro_stddev_y_axis = rawdata$fBodyGyro_std_Y,
-                                 ff_body_gyro_stddev_z_axis = rawdata$fBodyGyro_std_Z,
-                                 ff_body_accel_magnification_mean = rawdata$fBodyAccMag_mean,
-                                 ff_body_accel_magnification_stddev = rawdata$fBodyAccMag_std,
-                                 ff_body_accel_jerk_magnification_mean = rawdata$fBodyBodyAccJerkMag_mean,
-                                 ff_body_accel_jerk_magnification_stddev = rawdata$fBodyBodyAccJerkMag_std,
-                                 ff_body_gyro_magnification_mean = rawdata$fBodyBodyGyroMag_mean,
-                                 ff_body_gyro_magnification_stddev = rawdata$fBodyBodyGyroMag_std,
-                                 ff_body_gyro_jerk_magnification_mean = rawdata$fBodyBodyGyroJerkMag_mean,
-                                 ff_body_gyro_jerk_magnification_stddev = rawdata$fBodyBodyGyroJerkMag_std,
-                                 angle_body_accel_mean = rawdata$angle_tBodyAccMean_gravity,
-                                 angle_body_accel_jerk_mean = rawdata$angle_tBodyAccJerkMean_gravityMean,
-                                 angle_body_gyro_mean = rawdata$angle_tBodyGyroMean_gravityMean,
-                                 angle_body_gyro_jerk_mean = rawdata$angle_tBodyGyroJerkMean_gravityMean,
-                                 angle_x_gravity_mean = rawdata$angle_X_gravityMean,
-                                 angle_y_gravity_mean = rawdata$angle_Y_gravityMean,
-                                 angle_z_gravity_mean = rawdata$angle_Z_gravityMean
+        tempdata <- data.frame(activity = rawdata$activity,
+                               subject = rawdata$subject,
+                               time_mean_x_axis_body_accel = rawdata$tBodyAcc_mean_X,
+                               time_mean_y_axis_body_accel = rawdata$tBodyAcc_mean_Y,
+                               time_mean_z_axis_body_accel = rawdata$tBodyAcc_mean_Z,
+                               time_sdev_x_axis_body_accel = rawdata$tBodyAcc_std_X,
+                               time_sdev_y_axis_body_accel = rawdata$tBodyAcc_std_Y,
+                               time_sdev_z_axis_body_accel = rawdata$tBodyAcc_std_Z,
+                               time_mean_x_axis_gravity_accel = rawdata$tGravityAcc_mean_X,
+                               time_mean_y_axis_gravity_accel = rawdata$tGravityAcc_mean_Y,
+                               time_mean_z_axis_gravity_accel = rawdata$tGravityAcc_mean_Z,
+                               time_sdev_x_axis_gravity_accel = rawdata$tGravityAcc_std_X,
+                               time_sdev_y_axis_gravity_accel = rawdata$tGravityAcc_std_Y,
+                               time_sdev_z_axis_gravity_accel = rawdata$tGravityAcc_std_Z,
+                               time_mean_x_axis_body_accel_jerk = rawdata$tBodyAccJerk_mean_X,
+                               time_mean_y_axis_body_accel_jerk = rawdata$tBodyAccJerk_mean_Y,
+                               time_mean_z_axis_body_accel_jerk = rawdata$tBodyAccJerk_mean_Z,
+                               time_sdev_x_axis_body_accel_jerk = rawdata$tBodyAccJerk_std_X,
+                               time_sdev_y_axis_body_accel_jerk = rawdata$tBodyAccJerk_std_Y,
+                               time_sdev_z_axis_body_accel_jerk = rawdata$tBodyAccJerk_std_Z, 
+                               time_mean_x_axis_body_gyro = rawdata$tBodyGyro_mean_X,
+                               time_mean_y_axis_body_gyro = rawdata$tBodyGyro_mean_Y,
+                               time_mean_z_axis_body_gyro = rawdata$tBodyGyro_mean_Z,
+                               time_sdev_x_axis_body_gyro = rawdata$tBodyGyro_std_X,
+                               time_sdev_y_axis_body_gyro = rawdata$tBodyGyro_std_Y,
+                               time_sdev_z_axis_body_gyro = rawdata$tBodyGyro_std_Z,
+                               time_mean_x_axis_body_gyro_jerk = rawdata$tBodyGyroJerk_mean_X,
+                               time_mean_y_axis_body_gyro_jerk = rawdata$tBodyGyroJerk_mean_Y,
+                               time_mean_z_axis_body_gyro_jerk = rawdata$tBodyGyroJerk_mean_Z,
+                               time_sdev_x_axis_body_gyro_jerk = rawdata$tBodyGyroJerk_std_X,
+                               time_sdev_y_axis_body_gyro_jerk = rawdata$tBodyGyroJerk_std_Y,
+                               time_sdev_z_axis_body_gyro_jerk = rawdata$tBodyGyroJerk_std_Z,
+                               time_mean_body_accel_magnification = rawdata$tBodyAccMag_mean,
+                               time_sdev_body_accel_magnification = rawdata$tBodyAccMag_std,
+                               time_mean_gravity_accel_magnification = rawdata$tGravityAccMag_mean,
+                               time_sdev_gravity_accel_magnification = rawdata$tGravityAccMag_std,
+                               ffor_mean_x_axis_body_accel = rawdata$fBodyAcc_mean_X,
+                               ffor_mean_y_axis_body_accel = rawdata$fBodyAcc_mean_Y,
+                               ffor_mean_z_axis_body_accel = rawdata$fBodyAcc_mean_Z,
+                               ffor_sdev_x_axis_body_accel = rawdata$fBodyAcc_std_X,
+                               ffor_sdev_y_axis_body_accel = rawdata$fBodyAcc_std_Y,
+                               ffor_sdev_z_axis_body_accel = rawdata$fBodyAcc_std_Z,
+                               ffor_mean_x_axis_body_accel_jerk = rawdata$fBodyAccJerk_mean_X,
+                               ffor_mean_y_axis_body_accel_jerk = rawdata$fBodyAccJerk_mean_Y,
+                               ffor_mean_z_axis_body_accel_jerk = rawdata$fBodyAccJerk_mean_Z,
+                               ffor_sdev_x_axis_body_accel_jerk = rawdata$fBodyAccJerk_std_X,
+                               ffor_sdev_y_axis_body_accel_jerk = rawdata$fBodyAccJerk_std_Y,
+                               ffor_sdev_z_axis_body_accel_jerk = rawdata$fBodyAccJerk_std_Z, 
+                               ffor_mean_x_axis_body_gyro = rawdata$fBodyGyro_mean_X,
+                               ffor_mean_y_axis_body_gyro = rawdata$fBodyGyro_mean_Y,
+                               ffor_mean_z_axis_body_gyro = rawdata$fBodyGyro_mean_Z,
+                               ffor_sdev_x_axis_body_gyro = rawdata$fBodyGyro_std_X,
+                               ffor_sdev_y_axis_body_gyro = rawdata$fBodyGyro_std_Y,
+                               ffor_sdev_z_axis_body_gyro = rawdata$fBodyGyro_std_Z,
+                               ffor_mean_body_accel_magnification = rawdata$fBodyAccMag_mean,
+                               ffor_sdev_body_accel_magnification = rawdata$fBodyAccMag_std,
+                               ffor_mean_body_accel_jerk_magnification = rawdata$fBodyBodyAccJerkMag_mean,
+                               ffor_sdev_body_accel_jerk_magnification = rawdata$fBodyBodyAccJerkMag_std,
+                               ffor_mean_body_gyro_magnification = rawdata$fBodyBodyGyroMag_mean,
+                               ffor_sdev_body_gyro_magnification = rawdata$fBodyBodyGyroMag_std,
+                               ffor_mean_body_gyro_jerk_magnification = rawdata$fBodyBodyGyroJerkMag_mean,
+                               ffor_sdev_body_gyro_jerk_magnification = rawdata$fBodyBodyGyroJerkMag_std
         )
         
         # sort data frame by activity and then by subject
-        cleandata <<- arrange(cleandata, activity, subject)
+        tempdata <- arrange(tempdata, activity, subject)
         
-        # write the clean data to the data directory in the form of a .RData
+        # write the tidy data to the data directory in the form of a .RData
         # file as well as a .csv (comman delimited) file
         message("Writing cleansed data to disk in 'data' directory...")
-        write.table( cleandata, 
-                     file = "data/cleaned_data.csv", 
+        write.tabView le( tempdata, 
+                     file = "data/tidy_data.csv", 
                      sep = ",",
                      row.names = FALSE)
-        save( cleandata, file = "data/cleaned_data.RData")        
+        save( tempdata, file = "data/tidy_data.RData")        
     }
     
     
@@ -230,7 +225,7 @@ run_analysis <- function() {
     summarizeData <- function() {
         message("Summarizing data to the 'data' directory...")
         
-        averages <- ddply(cleandata, .(activity, subject), colwise(mean))
+        averages <- ddply(tidydata, .(activity, subject), colwise(mean))
         averages <- arrange(averages, activity, subject)
         
         # Write out the summarized data to disk
@@ -254,7 +249,7 @@ run_analysis <- function() {
         nameColumns()                              # name data columns
         mergeData()                                # Merge needed tables together
         extractData()                              # Extract into tidy data set
-        summarizeData()                            # summaize avg for clean data
+        # summarizeData()                            # summaize avg for clean data
         message("Analysis is completed!")
     }
 }
